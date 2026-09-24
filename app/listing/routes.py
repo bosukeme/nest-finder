@@ -1,12 +1,11 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
-
 from app.config import settings
-from app.listing import services as svc
 from app.db.session import get_db
+from app.listing import services as svc
 from app.listing.schemas import (
     ListingCreate,
     ListingRead,
@@ -37,9 +36,7 @@ Pagination = Annotated[PageParams, Depends()]
 def _get_or_404(db: Session, listing_id: int):
     listing = svc.get_listing(db, listing_id)
     if listing is None:
-        raise HTTPException(
-            status.HTTP_404_NOT_FOUND, f"Listing {listing_id} not found"
-        )
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Listing {listing_id} not found")
     return listing
 
 
@@ -51,9 +48,7 @@ def create_listing(payload: ListingCreate, db: DB):
 @router.get("", response_model=Page[ListingRead])
 def list_listings(db: DB, page: Pagination):
     rows, total = svc.list_listings(db, limit=page.limit, offset=page.offset)
-    return Page[ListingRead](
-        items=rows, total=total, limit=page.limit, offset=page.offset
-    )
+    return Page[ListingRead](items=rows, total=total, limit=page.limit, offset=page.offset)
 
 
 @router.get("/search", response_model=Page[ListingSearchRead])
@@ -68,9 +63,7 @@ def search_listings(db: DB, params: Annotated[SearchParams, Query()]):
         )
         for listing, dist_m in rows
     ]
-    return Page[ListingSearchRead](
-        items=items, total=total, limit=params.limit, offset=params.offset
-    )
+    return Page[ListingSearchRead](items=items, total=total, limit=params.limit, offset=params.offset)
 
 
 @router.get("/{listing_id}", response_model=ListingRead)

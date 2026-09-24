@@ -1,12 +1,10 @@
 from fastapi import FastAPI
-from app.errors import register_exception_handlers
-from app.middlewares import register_middleware
-from app.listing.routes import router as listings
-
 from sqlalchemy import text
 
 from app.db.session import engine
-
+from app.errors import register_exception_handlers
+from app.listing.routes import router as listings
+from app.middlewares import register_middleware
 
 app = FastAPI(
     title="Nest Finder API",

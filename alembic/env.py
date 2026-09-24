@@ -1,10 +1,10 @@
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
-from alembic import context
 
-from app.db.session import Base
+from alembic import context
 from app.config import settings
+from app.db.session import Base
 from app.listing.models import Listing  # noqa: F401
 
 config = context.config
@@ -26,6 +26,7 @@ def include_object(obj, name, type_, reflected, compare_to):
     if type_ == "index" and obj.table.name not in target_metadata.tables:
         return False
     return True
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.

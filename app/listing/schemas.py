@@ -3,6 +3,7 @@ from decimal import Decimal
 from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
 from app.config import settings
 from app.listing.models import ListingType
 
@@ -75,7 +76,6 @@ class Page(BaseModel, Generic[T]):
 
 
 class ListingUpdate(BaseModel):
-
     model_config = ConfigDict(extra="forbid")
 
     title: str | None = Field(default=None, min_length=1, max_length=200)
@@ -115,31 +115,17 @@ class SearchParams(BaseModel):
     lng: float | None = Field(default=None, ge=-180, le=180)
     radius_km: float | None = Field(default=None, gt=0, le=500)
 
-    limit: int = Field(
-        default=settings.default_page_size, ge=1, le=settings.max_page_size
-    )
+    limit: int = Field(default=settings.default_page_size, ge=1, le=settings.max_page_size)
     offset: int = Field(default=0, ge=0)
 
     @model_validator(mode="after")
     def _cross_field_checks(self) -> "SearchParams":
-        if (
-            self.min_price is not None
-            and self.max_price is not None
-            and self.min_price > self.max_price
-        ):
+        if self.min_price is not None and self.max_price is not None and self.min_price > self.max_price:
             raise ValueError("min_price cannot be greater than max_price")
 
-        if self.bedrooms is not None and (
-            self.min_bedrooms is not None or self.max_bedrooms is not None
-        ):
-            raise ValueError(
-                "use either bedrooms or min_bedrooms/max_bedrooms, not both"
-            )
-        if (
-            self.min_bedrooms is not None
-            and self.max_bedrooms is not None
-            and self.min_bedrooms > self.max_bedrooms
-        ):
+        if self.bedrooms is not None and (self.min_bedrooms is not None or self.max_bedrooms is not None):
+            raise ValueError("use either bedrooms or min_bedrooms/max_bedrooms, not both")
+        if self.min_bedrooms is not None and self.max_bedrooms is not None and self.min_bedrooms > self.max_bedrooms:
             raise ValueError("min_bedrooms cannot be greater than max_bedrooms")
 
         geo = (self.lat, self.lng, self.radius_km)

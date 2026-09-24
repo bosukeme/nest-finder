@@ -5,28 +5,22 @@ os.environ["DATABASE_URL"] = os.environ.get(
     "postgresql+psycopg://nestfinder:nestfinder@db:5432/nestfinder_test",
 )
 
-from sqlalchemy.engine import make_url
-from sqlalchemy import create_engine, text
 import pytest
-from alembic import command
 from alembic.config import Config
 from fastapi.testclient import TestClient
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import make_url
 
-
+from alembic import command
 from app.db.session import engine
 from app.main import app
 
 
 def _ensure_test_db() -> None:
     url = make_url(os.environ["DATABASE_URL"])
-    admin = create_engine(url.set(database="postgres"),
-                          isolation_level="AUTOCOMMIT")
+    admin = create_engine(url.set(database="postgres"), isolation_level="AUTOCOMMIT")
     with admin.connect() as conn:
-        exists = conn.scalar(
-            text("SELECT 1 FROM pg_database WHERE datname = :n"), {
-                "n": url.database}
-        )
+        exists = conn.scalar(text("SELECT 1 FROM pg_database WHERE datname = :n"), {"n": url.database})
         if not exists:
             conn.execute(text(f'CREATE DATABASE "{url.database}"'))
     admin.dispose()
@@ -36,6 +30,7 @@ def _ensure_test_db() -> None:
 def _migrate():
     _ensure_test_db()
     command.upgrade(Config("alembic.ini"), "head")
+
 
 @pytest.fixture(autouse=True)
 def _clean_tables():

@@ -1,6 +1,6 @@
 from geoalchemy2 import Geography
 from geoalchemy2.elements import WKTElement
-from sqlalchemy import func, select, cast
+from sqlalchemy import cast, func, select
 from sqlalchemy.orm import Session
 
 from app.listing.models import Listing
@@ -39,9 +39,7 @@ def get_listing(db: Session, listing_id: int) -> Listing | None:
 
 def list_listings(db: Session, *, limit: int, offset: int) -> tuple[list[Listing], int]:
     total = db.scalar(select(func.count()).select_from(Listing)) or 0
-    rows = db.scalars(
-        select(Listing).order_by(Listing.id).limit(limit).offset(offset)
-    ).all()
+    rows = db.scalars(select(Listing).order_by(Listing.id).limit(limit).offset(offset)).all()
     return list(rows), total
 
 
@@ -65,9 +63,7 @@ def delete_listing(db: Session, listing: Listing) -> None:
     db.commit()
 
 
-def search_listings(
-    db: Session, params: SearchParams
-) -> tuple[list[tuple[Listing, float | None]], int]:
+def search_listings(db: Session, params: SearchParams) -> tuple[list[tuple[Listing, float | None]], int]:
     """Filter listings; returns ([(listing, distance_m | None)], total)."""
     filters = []
     if params.type is not None:
@@ -89,17 +85,13 @@ def search_listings(
             Geography,
         )
         distance = func.ST_Distance(Listing.location, point).label("distance_m")
-        filters.append(
-            func.ST_DWithin(Listing.location, point, params.radius_km * 1000)
-        )
+        filters.append(func.ST_DWithin(Listing.location, point, params.radius_km * 1000))
         stmt = select(Listing, distance).order_by(distance, Listing.id)
     else:
         stmt = select(Listing).order_by(Listing.id)
 
     total = db.scalar(select(func.count()).select_from(Listing).where(*filters)) or 0
-    rows = db.execute(
-        stmt.where(*filters).limit(params.limit).offset(params.offset)
-    ).all()
+    rows = db.execute(stmt.where(*filters).limit(params.limit).offset(params.offset)).all()
 
     if params.has_geo:
         return [(r[0], float(r[1])) for r in rows], total

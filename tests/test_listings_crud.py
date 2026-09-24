@@ -4,8 +4,8 @@ from sqlalchemy import text
 
 from app.db.session import engine
 
-
 base_prefix = "/api/v1"
+
 
 def _create(client, payload, **overrides):
     resp = client.post(f"{base_prefix}/listings", json={**payload, **overrides})
@@ -25,9 +25,7 @@ def test_create_listing(client, payload):
 def test_create_stores_geography_point(client, payload):
     _create(client, payload)
     with engine.connect() as conn:
-        x, y = conn.execute(
-            text("SELECT ST_X(location::geometry), ST_Y(location::geometry) FROM listings")
-        ).one()
+        x, y = conn.execute(text("SELECT ST_X(location::geometry), ST_Y(location::geometry) FROM listings")).one()
     assert (x, y) == (7.0498, 4.8156)  # x = lng, y = lat
 
 
@@ -82,9 +80,7 @@ def test_patch_location_keeps_geography_in_sync(client, payload):
     resp = client.patch(f"{base_prefix}/listings/{created['id']}", json={"location": new_loc})
     assert resp.json()["location"] == new_loc
     with engine.connect() as conn:
-        x, y = conn.execute(
-            text("SELECT ST_X(location::geometry), ST_Y(location::geometry) FROM listings")
-        ).one()
+        x, y = conn.execute(text("SELECT ST_X(location::geometry), ST_Y(location::geometry) FROM listings")).one()
     assert (x, y) == (3.3792, 6.5244)
 
 

@@ -1,6 +1,7 @@
 import enum
 from datetime import datetime
 from decimal import Decimal
+
 from geoalchemy2 import Geography
 from sqlalchemy import CheckConstraint, DateTime, Enum, Index, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column
@@ -30,15 +31,11 @@ class Listing(Base):
 
     latitude: Mapped[float]
     longitude: Mapped[float]
-    location = mapped_column(
-        Geography(geometry_type="POINT", srid=4326), nullable=False
-    )
+    location = mapped_column(Geography(geometry_type="POINT", srid=4326), nullable=False)
 
     agent_id: Mapped[int] = mapped_column(index=True)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

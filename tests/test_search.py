@@ -4,6 +4,7 @@ CENTER = {"lat": 4.8156, "lng": 7.0498}
 
 base_prefix = "/api/v1"
 
+
 def _mk(client, title, *, lat, lng, price="1000000", type="rent", bedrooms=2, agent_id=1):
     resp = client.post(
         f"{base_prefix}/listings",

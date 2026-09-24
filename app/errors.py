@@ -32,10 +32,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def validation_exc(_: Request, exc: RequestValidationError):
         details = [
             {
-                "field": ".".join(
-                    str(p) for p in e["loc"] if p not in ("body", "query")
-                )
-                or "request",
+                "field": ".".join(str(p) for p in e["loc"] if p not in ("body", "query")) or "request",
                 "message": e["msg"],
             }
             for e in exc.errors()
@@ -48,6 +45,4 @@ def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(Exception)
     async def unhandled(_: Request, exc: Exception):
         logger.exception("Unhandled error", exc_info=exc)
-        return JSONResponse(
-            _body("internal_error", "Something went wrong"), status_code=500
-        )
+        return JSONResponse(_body("internal_error", "Something went wrong"), status_code=500)
