@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from sqlalchemy.orm import Session
 
 
@@ -10,7 +10,10 @@ from app.db.session import get_db
 from app.listing.schemas import (
     ListingCreate,
     ListingRead,
+    ListingSearchRead,
+    ListingUpdate,
     Page,
+    SearchParams,
 )
 
 router = APIRouter()
@@ -51,3 +54,38 @@ def list_listings(db: DB, page: Pagination):
     return Page[ListingRead](
         items=rows, total=total, limit=page.limit, offset=page.offset
     )
+
+
+@router.get("/search", response_model=Page[ListingSearchRead])
+def search_listings(db: DB, params: Annotated[SearchParams, Query()]):
+    """Filter by type, price range and bedrooms; optionally restrict to
+    listings within `radius_km` of (`lat`, `lng`), nearest first."""
+    rows, total = svc.search_listings(db, params)
+    items = [
+        ListingSearchRead(
+            **ListingRead.model_validate(listing).model_dump(),
+            distance_km=None if dist_m is None else round(dist_m / 1000, 3),
+        )
+        for listing, dist_m in rows
+    ]
+    return Page[ListingSearchRead](
+        items=items, total=total, limit=params.limit, offset=params.offset
+    )
+
+
+@router.get("/{listing_id}", response_model=ListingRead)
+def get_listing(listing_id: int, db: DB):
+    return _get_or_404(db, listing_id)
+
+
+@router.patch("/{listing_id}", response_model=ListingRead)
+def update_listing(listing_id: int, payload: ListingUpdate, db: DB):
+    listing = _get_or_404(db, listing_id)
+    return svc.update_listing(db, listing, payload)
+
+
+@router.delete("/{listing_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_listing(listing_id: int, db: DB):
+    listing = _get_or_404(db, listing_id)
+    svc.delete_listing(db, listing)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
