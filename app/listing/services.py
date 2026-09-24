@@ -13,7 +13,6 @@ from app.listing.schemas import (
 
 
 def _point(loc: Location) -> WKTElement:
-    # WKT is (x y) = (lng lat)
     return WKTElement(f"POINT({loc.lng} {loc.lat})", srid=4326)
 
 
@@ -90,7 +89,6 @@ def search_listings(
             Geography,
         )
         distance = func.ST_Distance(Listing.location, point).label("distance_m")
-        # ST_DWithin on geography works in metres and uses the GiST index.
         filters.append(
             func.ST_DWithin(Listing.location, point, params.radius_km * 1000)
         )

@@ -52,8 +52,6 @@ class ListingRead(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _from_orm(cls, data: Any) -> Any:
-        # The ORM row stores flat latitude/longitude; the API exposes them
-        # as a nested `location` object.
         if hasattr(data, "latitude"):
             return {
                 "id": data.id,
@@ -77,7 +75,6 @@ class Page(BaseModel, Generic[T]):
 
 
 class ListingUpdate(BaseModel):
-    """Partial update: only the fields sent are changed."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -118,7 +115,6 @@ class SearchParams(BaseModel):
     lng: float | None = Field(default=None, ge=-180, le=180)
     radius_km: float | None = Field(default=None, gt=0, le=500)
 
-    # pagination lives here because the model forbids unknown query params
     limit: int = Field(
         default=settings.default_page_size, ge=1, le=settings.max_page_size
     )
@@ -157,6 +153,4 @@ class SearchParams(BaseModel):
 
 
 class ListingSearchRead(ListingRead):
-    # Straight-line (geodesic) distance from the query point; null when no
-    # point was supplied.
     distance_km: float | None = None
